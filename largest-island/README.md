@@ -35,6 +35,13 @@ Terminology:
 1. Knowing that pixels are checked top to bottom, left to right, it might be intuitive to skip checking up and left
 though this is not possible see 'test_native_skip_up'
 
+# Running the solution
+
+```
+cargo run
+cargo bench
+```
+
 # Performance:
 
 M1 Macbook Air

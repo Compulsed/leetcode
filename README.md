@@ -5,12 +5,12 @@ Various implementation of L33t code problems written in Rust
 Solved problems:
 1. Largest island (2 interviews)
 1. Polish notion calculator (1 interview)
+1. Find largest consecutive positive integer (1 interview)
 
 To solve:
 1. String reversal (1 interview)
 1. Email format generator (Dale Salter -> Dale Salter dale.salter1@example.com) (1 interview)
 1. Given multiple TV channels at X bit p/s, find the largest concurrent bit rate (1 interview)
-1. Find the smallest positive integer
 1. Reverse a linked list
 1. Sort a list
 1. Graph Traversals (DFS, BFS)

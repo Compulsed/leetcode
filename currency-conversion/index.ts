@@ -12,7 +12,6 @@ interface ConversionsMap {
 interface Currency {
     currencySymbol: string
     conversions: ConversionsMap
-    searched?: boolean
 }
 
 interface ConversionsEntries {
@@ -23,10 +22,10 @@ const currencyNode: ConversionsEntries = {}
 
 
 const data = [
-    ['USD', 'EUR', 1.05],
-    ['EUR', 'AUD', 0.65],
-    ['AUD', 'YEN', 0.65],
-    ['USD', 'GBP', 2.00],
+    ['USD', 'EUR', 2],
+    ['EUR', 'AUD', 2],
+    ['AUD', 'YEN', 2],
+    ['USD', 'GBP', 2],
     // Crypto
     ['DOGE', 'BTC', 0.65],
     ['BTC', 'ETH', 0.65],
@@ -65,37 +64,64 @@ data.forEach((conversionData) => {
 
 console.log(util.inspect(currencyNode, null, 4))
 
-
-const convertSimple = (fromCurrency: string, toCurrency: string, amountToConvert: number): number => {
-    return currencyNode[fromCurrency].conversions[toCurrency].amount * amountToConvert
+interface Accululator {
+    total: number
+    searchedCurrencies: Set<string>
 }
 
-const convertRecursive = (currentCurrency: Currency, currencyToFind: string): ("FOUND" | "NOT_FOUND") => {
+const convertRecursive = (acc: Accululator, currentCurrency: Currency, currencyToFind: string): ("FOUND" | "NOT_FOUND") => {
+    const currentCurrencySymbol = currentCurrency.currencySymbol
 
-    if (currentCurrency.currencySymbol === currencyToFind) {
+    // Bcase case 1: We have found a conversion, return that we have found the case
+    if (currentCurrencySymbol === currencyToFind) {
         return "FOUND"
     }
 
-    if (currentCurrency.searched === true) {
+    // Base case 2: Prevent looping through currencies we have already seen
+    if (acc.searchedCurrencies.has(currentCurrencySymbol)) {
         return "NOT_FOUND"
     }
 
-    currentCurrency.searched = true
+    acc.searchedCurrencies.add(currentCurrencySymbol)
 
     // Iteration: Search each child node
     for (const currencyToSearchSymbol in currentCurrency.conversions) {
         const currencyToSearch = currentCurrency.conversions[currencyToSearchSymbol];
 
         // A child node has the currency
-        if (convertRecursive(currencyToSearch.currency, currencyToFind) !== "NOT_FOUND") {
+        if (convertRecursive(acc, currencyToSearch.currency, currencyToFind) !== "NOT_FOUND") {
+
+            acc.total = acc.total * currencyToSearch.amount
+
             return "FOUND"
         }
     }
 
+    // We did not find the currency we were looking for
     return "NOT_FOUND"
 }
 
 
-console.log(convertRecursive(currencyNode.YEN, 'DOGE'))
-// console.log(convert('GBP', 'USD', 10))
+const convert = (fromCurrency: string, toCurrency: string, amount: number): (number | "NO_MATCHING_CURRENCY_PAIRS") => {
+    const acc: Accululator = { 
+        total: amount,
+        searchedCurrencies: new Set()
+    };
+
+    const result = convertRecursive(acc, currencyNode[fromCurrency], toCurrency)
+
+    if (result === "FOUND") {
+        return acc.total
+    }
+
+    if (result === "NOT_FOUND") {
+        return "NO_MATCHING_CURRENCY_PAIRS"
+    }
+    
+    throw new Error("Logic error: result states did not match 'FOUND' or 'NOT_FOUND'")
+} 
+
+
+console.log(convert('USD', 'AUD', 1))
+console.log(convert('USD', 'ETH', 1))
 // console.log(convert('USD', 'AUD', 10))

@@ -1,4 +1,6 @@
 import util from 'node:util'
+import assert from 'node:assert'
+import { describe, it } from 'node:test'
 
 interface Conversion {
     currency: Currency
@@ -14,24 +16,17 @@ interface Currency {
     conversions: ConversionsMap
 }
 
-interface ConversionsEntries {
+interface CurrencyNodes {
     [currencySymbol: string]: Currency
 }
 
-const currencyNode: ConversionsEntries = {}
+interface Accululator {
+    total: number
+    searchedCurrencies: Set<string>
+}
 
 
-const data = [
-    ['USD', 'EUR', 2],
-    ['EUR', 'AUD', 2],
-    ['AUD', 'YEN', 2],
-    ['USD', 'GBP', 2],
-    // Crypto
-    ['DOGE', 'BTC', 0.65],
-    ['BTC', 'ETH', 0.65],
-]
-
-const initializeGetCurrency = (symbol: string): Currency => {
+const initializeGetCurrency = (currencyNode: CurrencyNodes, symbol: string): Currency => {
     if(!currencyNode[symbol]) {
         currencyNode[symbol] = {
             conversions: {},
@@ -49,25 +44,6 @@ const addPair = (toCurrency: Currency, fromCurrency: Currency, amount: number) =
     }    
 }
 
-data.forEach((conversionData) => {
-    const [toSymbol, fromSymbol, amount] = conversionData as [string, string, number]
-
-    // Ensure currencies are initialized
-    const toCurrency = initializeGetCurrency(toSymbol)
-    const fromCurrency = initializeGetCurrency(fromSymbol)
-
-    // Link each of the currencies to each other
-    addPair(toCurrency, fromCurrency, amount)
-    addPair(fromCurrency, toCurrency, 1 / amount)
-});
-
-
-console.log(util.inspect(currencyNode, null, 4))
-
-interface Accululator {
-    total: number
-    searchedCurrencies: Set<string>
-}
 
 const convertRecursive = (acc: Accululator, currentCurrency: Currency, currencyToFind: string): ("FOUND" | "NOT_FOUND") => {
     const currentCurrencySymbol = currentCurrency.currencySymbol
@@ -86,6 +62,8 @@ const convertRecursive = (acc: Accululator, currentCurrency: Currency, currencyT
 
     // Iteration: Search each child node
     for (const currencyToSearchSymbol in currentCurrency.conversions) {
+
+        // Improvement to a mutable acc: Send conversion as a part of the arguments?
         const currencyToSearch = currentCurrency.conversions[currencyToSearchSymbol];
 
         // A child node has the currency
@@ -101,8 +79,25 @@ const convertRecursive = (acc: Accululator, currentCurrency: Currency, currencyT
     return "NOT_FOUND"
 }
 
+const buildCurrencyGraph = (currencyData: Array<Array<string | number>>): CurrencyNodes => {
+    const currencyNode: CurrencyNodes = {}
+    
+    currencyData.forEach((conversionData) => {
+        const [toSymbol, fromSymbol, amount] = conversionData as [string, string, number]
+    
+        // Ensure currencies are initialized
+        const toCurrency = initializeGetCurrency(currencyNode, toSymbol)
+        const fromCurrency = initializeGetCurrency(currencyNode, fromSymbol)
+    
+        // Link each of the currencies to each other
+        addPair(toCurrency, fromCurrency, amount)
+        addPair(fromCurrency, toCurrency, 1 / amount)
+    });
+    
+    return currencyNode
+}
 
-const convert = (fromCurrency: string, toCurrency: string, amount: number): (number | "NO_MATCHING_CURRENCY_PAIRS") => {
+const traverseCurrencyGraph = (currencyNode: CurrencyNodes, fromCurrency: string, toCurrency: string, amount: number): (number | "NO_MATCHING_CURRENCY_PAIRS") => {
     const acc: Accululator = { 
         total: amount,
         searchedCurrencies: new Set()
@@ -119,9 +114,50 @@ const convert = (fromCurrency: string, toCurrency: string, amount: number): (num
     }
     
     throw new Error("Logic error: result states did not match 'FOUND' or 'NOT_FOUND'")
+}
+
+const convert = (currencyData: Array<Array<string | number>>, fromCurrency: string, toCurrency: string, amount: number): (number | "NO_MATCHING_CURRENCY_PAIRS") => {
+    const currencyNode = buildCurrencyGraph(currencyData)
+
+    return traverseCurrencyGraph(currencyNode,  fromCurrency, toCurrency, amount)
 } 
 
 
-console.log(convert('USD', 'AUD', 1))
-console.log(convert('USD', 'ETH', 1))
-// console.log(convert('USD', 'AUD', 10))
+describe('happy case', () => {
+    it('should give the correct response for a simple case', () => {
+        const data = [
+            ['USD', 'EUR', 2],
+        ]
+
+        assert.strictEqual(convert(data, 'USD', 'EUR', 1), 2)
+    })
+
+    it('should give the correct response multi-node-hop', () => {
+        const data = [
+            ['USD', 'EUR', 2],
+            ['EUR', 'AUD', 2],
+        ]
+
+        assert.strictEqual(convert(data, 'USD', 'AUD', 1), 4)
+    })
+
+    it('should give the correct response multi-node-hop in reverse', () => {
+        const data = [
+            ['USD', 'EUR', 2],
+            ['EUR', 'AUD', 2],
+        ]
+
+        assert.strictEqual(convert(data, 'AUD', 'USD', 1), 0.25)
+    })    
+
+    it('should return not found when there is no possible link', () => {
+        const data = [
+            ['USD', 'EUR', 2],
+            ['ETH', 'DOGE', 2]
+        ]
+
+        assert.strictEqual(convert(data, 'USD', 'DOGE', 1), 'NO_MATCHING_CURRENCY_PAIRS')
+    })
+})
+
+

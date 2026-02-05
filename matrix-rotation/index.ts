@@ -1,41 +1,3 @@
-// const matrix = [
-//     [1, 2, 3],
-//     [4, 5, 6],
-//     [7, 8, 9]
-// ]
-
-// function rotatePoint(matrix: number[][], x: number, w: number) {
-//     console.log([
-//         [0, x],
-//         [x, w],
-//         [w, x],
-//         [x, 0]
-//     ])
-
-//     const temp = matrix[0][x]
-//     matrix[0][x] = matrix[w - x][0]
-//     matrix[w - x][0] = matrix[w][w - x]
-//     matrix[w][w - x] = matrix[x][w]
-//     matrix[x][w] = temp    
-// }
-
-// function rotateRow(matrix: number[][], y: number) {
-
-// }
-
-
-// rotatePoint(matrix, 0, 2)
-
-// console.log(matrix)
-
-
-const matrix = [
-    [1, 2, 3],
-    [4, 5, 6],
-    [7, 8, 9]
-]
-
-
 const copy = (matrix: number[][], startPoint: number[], endPoint: number[]): number[] => {
     const copyData: number[] = []
 
@@ -62,17 +24,17 @@ const placeRow = (matrix: number[][], row: number[], startPoint: number[], endPo
     }
 }
 
-const printMatrix = (matrix: number[][]) => {
-    console.log("-----")
-    matrix.forEach(r => console.log(r))
-    console.log("-----")
-}
 
-const run = () => {
-    const topLeft = [0, 0]
-    const topRight = [0, 2]
-    const bottomRight = [2, 2]
-    const bottomLeft = [2, 0]
+
+const rotateLayer = (matrix: number[][], layerNumber: number) => {
+    const matrixSize = matrix.length - 1
+    const start = layerNumber
+    const end = matrixSize - layerNumber
+
+    const topLeft = [start, start]
+    const topRight = [start, end]
+    const bottomRight = [end, end]
+    const bottomLeft = [end, start]
 
     const topRow = copy(matrix, topLeft, topRight);
     const rightRow = copy(matrix, topRight, bottomRight)
@@ -87,11 +49,39 @@ const run = () => {
     placeRow(matrix, rightRow, bottomLeft, bottomRight)
     placeRow(matrix, bottomRow, topLeft, bottomLeft)
     placeRow(matrix, leftRow, topLeft, topRight)
-
-
     
+}
+
+const printMatrix = (matrix: number[][]) => {
+    console.log("-----")
+    matrix.forEach(r => console.log(r))
+    console.log("-----")
+}
+
+const run = (matrix: number[][]) => {
+    const layerCount = Math.ceil(matrix.length / 2)
+
+    for (let l = 0; l < layerCount; ++l) {
+        rotateLayer(matrix, l)
+    }
+
     printMatrix(matrix)
 };
 
-run()
+const bigMatrix = [
+    ["00", "01", "02", "03", "04"],
+    ["10", "11", "12", "13", "14"],
+    ["20", "21", "22", "23", "24"],
+    ["30", "31", "32", "33", "34"],
+    ["40", "41", "42", "43", "44"],
+]
+
+const example2 = [
+    [5, 1, 9, 11],
+    [2, 4, 8, 10],
+    [13, 3, 6, 7],
+    [15, 14, 12, 16],
+]
+
+run(example2)
 

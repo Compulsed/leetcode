@@ -78,9 +78,9 @@ const pointIsInBounds = (matrix: number[][], point: Point) => {
     return true
 }
 
-const goIntoMatrix = (matrix: number[][], point: Point, direction: Direction, collector: PointsCollector) => {
+const goIntoMatrix = (matrix: number[][], point: Point, direction: Direction, collector: PointsCollector): boolean => {
     if (!pointIsInBounds(matrix, point) || collector.hasSeen(point)) {
-        return
+        return false
     }
 
     // Mark the point we are traveling to as seen
@@ -90,10 +90,15 @@ const goIntoMatrix = (matrix: number[][], point: Point, direction: Direction, co
     for (let i = 0; i < 4; ++i) {
         const nextPoint = direction.getNextPoint(point)
 
-        goIntoMatrix(matrix, nextPoint, direction, collector)
+        // We found the right path, we no long need to keep
+        if (goIntoMatrix(matrix, nextPoint, direction, collector)) {
+            return true
+        }
 
         direction.changeDirection();
     }
+
+    return false
 }
 
 const run = () => {

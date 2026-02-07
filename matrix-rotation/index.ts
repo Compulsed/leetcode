@@ -1,3 +1,33 @@
+// Note: Normally this requires this to be done 'in place', which is why it is much harder. i.e.
+//  you cannot create another matrix to copy data to
+
+// def rotate_90_clockwise(matrix):
+//     n = len(matrix)
+    
+//     # Step 1: Transpose (swap matrix[i][j] with matrix[j][i])
+//     for i in range(n):
+//         for j in range(i + 1, n):  # Only upper triangle
+//             matrix[i][j], matrix[j][i] = matrix[j][i], matrix[i][j]
+    4
+//     # Step 2: Reverse each row
+//     for i in range(n):
+//         matrix[i].reverse()  # Or manually: left, right = 0, n-1; swap
+// ```
+
+// **Time:** O(n²)  
+// **Space:** O(1)
+
+// ## Why This Works
+
+// Consider a 3×3 matrix:
+// ```
+// Original:        Transpose:       Reverse rows:
+// 1 2 3            1 4 7            7 4 1
+// 4 5 6    →       2 5 8     →      8 5 2
+// 7 8 9            3 6 9            9 6 3
+// Transpose flips along the main diagonal
+// Reversing rows completes the 90° clockwise rotation
+
 const copy = (matrix: number[][], startPoint: number[], endPoint: number[]): number[] => {
     const copyData: number[] = []
 

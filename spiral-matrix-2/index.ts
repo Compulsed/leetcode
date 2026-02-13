@@ -84,12 +84,12 @@ const step = (matrix: number[][], currentPoint: Point, currentDirection: string,
         return step(matrix, sameDirectionPoint, currentDirection, seenPoints)
     }
 
-    const nextDirection = getNextDirection(currentDirection)
+    const nextDirectionPoint = getNextDirection(currentDirection)
 
-    const differentDirectionPoint = getNextPoint(nextDirection, currentPoint)
+    const differentDirectionPoint = getNextPoint(nextDirectionPoint, currentPoint)
 
     if (canStepToPoint(matrix, seenPoints, differentDirectionPoint)) {
-        return step(matrix, differentDirectionPoint, nextDirection, seenPoints)
+        return step(matrix, differentDirectionPoint, nextDirectionPoint, seenPoints)
     }
 
     // We can conclude that we are at the end because this should all be valid

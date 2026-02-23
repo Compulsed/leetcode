@@ -9,3 +9,4 @@
 - Iterative solutions are often more space efficient than recursive
 - For cycle detection, Floyd's algorithm avoids extra space
 - Draw out pointer movements before coding
+- For rotating a linked list it might be useful to make the list a full circle
